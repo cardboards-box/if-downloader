@@ -1,32 +1,17 @@
-FROM oven/bun:1.3.14-alpine AS dependencies
-
+# Stage 1: Build the application
+FROM oven/bun:1 AS build
 WORKDIR /app
+COPY src/package.json src/bun.lock* ./
+RUN bun install --frozen-lockfile --ignore-scripts
+COPY src/ .
+RUN bun --bun run build
 
-COPY src/package.json src/bun.lock ./
-RUN bun install --frozen-lockfile
-
-FROM oven/bun:1.3.14-alpine AS build
-
+# Stage 2: Run the built application
+FROM oven/bun:1-slim AS production
 WORKDIR /app
-
-COPY --from=dependencies /app/node_modules ./node_modules
-COPY src/ ./
-RUN bun run build
-
-FROM oven/bun:1.3.14-alpine AS runtime
-
-WORKDIR /app
-
-ENV NODE_ENV=production \
-    HOST=0.0.0.0 \
-    PORT=3000
-
-COPY --from=build --chown=bun:bun /app/.output ./.output
-
-USER bun
+COPY --from=build /app/.output /app
 EXPOSE 3000
-
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD ["bun", "-e", "fetch('http://127.0.0.1:3000/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
-
-CMD ["bun", ".output/server/index.mjs"]
+ENV HOST=0.0.0.0
+ENV PORT=3000
+ENV NODE_ENV="production"
+ENTRYPOINT [ "bun", "--bun", "run", "/app/server/index.mjs" ]
