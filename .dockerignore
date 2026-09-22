@@ -1,0 +1,12 @@
+.git
+.github
+.idea
+.vscode
+src/.nuxt
+src/.output
+src/node_modules
+src/.env
+src/.env.*
+*.log
+README.md
+compose.yaml

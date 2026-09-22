@@ -1,0 +1,11 @@
+.git
+.gitignore
+.nuxt
+.output
+node_modules
+npm-debug.log*
+bun-error.log*
+.env
+.env.*
+README.md
+compose.yaml
